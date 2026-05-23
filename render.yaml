@@ -24,7 +24,9 @@ services:
         source: /*
         destination: /index.html
 
-    # Light caching + security headers
+    # Cache busting — short cache so deploys take effect immediately.
+    # Static client-side React reloads .jsx files every visit; we don't want
+    # browsers stuck on an old version after a push.
     headers:
       - path: /*
         name: X-Frame-Options
@@ -32,12 +34,6 @@ services:
       - path: /*
         name: Referrer-Policy
         value: strict-origin-when-cross-origin
-      - path: /*.css
+      - path: /*
         name: Cache-Control
-        value: public, max-age=3600, must-revalidate
-      - path: /*.jsx
-        name: Cache-Control
-        value: public, max-age=3600, must-revalidate
-      - path: /index.html
-        name: Cache-Control
-        value: no-cache, no-store, must-revalidate
+        value: no-cache, must-revalidate
