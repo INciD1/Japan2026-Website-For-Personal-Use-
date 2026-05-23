@@ -77,7 +77,7 @@ function NotesTab() {
       />
 
       {/* Three columns */}
-      <div style={{
+      <div className="notes-grid" style={{
         display: "grid",
         gridTemplateColumns: "1fr 1fr 1fr",
         gap: 36,

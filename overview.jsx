@@ -73,7 +73,7 @@ function Overview({ setTab, setSelectedDay }) {
       {/* WHO'S GOING */}
       <section style={{ marginBottom: 56 }}>
         <SectionHeader title="The five" jp="メンバー" right="6630 cohort" />
-        <div style={{
+        <div className="row-5" style={{
           display: "grid",
           gridTemplateColumns: "repeat(5, 1fr)",
           gap: 18,
@@ -105,7 +105,7 @@ function Overview({ setTab, setSelectedDay }) {
       </section>
 
       {/* THREE-UP: Route · Next up · Open todos */}
-      <section style={{
+      <section className="row-3" style={{
         display: "grid",
         gridTemplateColumns: "1.2fr 1fr 1fr",
         gap: 36,
@@ -218,7 +218,7 @@ function Overview({ setTab, setSelectedDay }) {
             see full day →
           </button>}
         />
-        <div style={{
+        <div className="row-2" style={{
           display: "grid",
           gridTemplateColumns: "1fr 1.5fr",
           gap: 32,

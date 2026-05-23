@@ -115,7 +115,7 @@ function MapTab({ mapStyle, setMapStyle, selectedCity, setSelectedCity }) {
         right={`${Object.keys(window.CITIES).length} pins · 1 long road`}
       />
 
-      <div style={{
+      <div className="map-grid" style={{
         display: "grid",
         gridTemplateColumns: "1.5fr 1fr",
         gap: 36,

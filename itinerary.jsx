@@ -1,12 +1,10 @@
-// itinerary.jsx — day-by-day timeline with day picker
+// itinerary.jsx — editable day-by-day timeline (per user)
 
 function CityChip({ cityKey }) {
   const city = window.CITIES[cityKey];
   if (!city) return null;
   return (
-    <span style={{
-      display: "inline-flex", alignItems: "center", gap: 8,
-    }}>
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
       <span style={{ fontFamily: "var(--font-jp)", color: "var(--accent)" }}>{city.kanji}</span>
       <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--ink-3)", letterSpacing: ".06em", textTransform: "uppercase" }}>
         {city.name}
@@ -15,37 +13,36 @@ function CityChip({ cityKey }) {
   );
 }
 
+const CITY_OPTIONS = Object.entries(window.CITIES).map(([k, v]) => ({
+  value: k, label: `${v.kanji}  ${v.name}`,
+}));
+
 function DayPicker({ days, selected, onSelect }) {
   return (
-    <div style={{
+    <div className="daypicker" style={{
       display: "grid",
-      gridTemplateColumns: `repeat(${days.length}, minmax(0, 1fr))`,
+      gridTemplateColumns: `repeat(${days.length}, minmax(56px, 1fr))`,
       borderTop: ".5px solid var(--line)",
       borderBottom: ".5px solid var(--line)",
       marginBottom: 32,
+      overflowX: "auto",
+      scrollSnapType: "x proximity",
     }}>
       {days.map(d => {
         const on = d.n === selected;
-        const city = window.CITIES[d.city];
         return (
-          <button
-            key={d.n}
+          <button key={d.n}
             onClick={() => onSelect(d.n)}
             data-on={on}
             style={{
-              appearance: "none", background: "none",
+              appearance: "none", background: on ? "rgba(196,66,42,.06)" : "transparent",
               border: 0, borderRight: ".5px solid var(--line-2)",
               padding: "12px 6px 14px",
               cursor: "default",
               color: on ? "var(--ink)" : "var(--ink-3)",
               position: "relative",
               textAlign: "center",
-              transition: "background 120ms ease",
-              background: on ? "rgba(196,66,42,.06)" : "transparent",
-            }}
-            onMouseEnter={e => { if (!on) e.currentTarget.style.background = "rgba(0,0,0,.03)"; }}
-            onMouseLeave={e => { if (!on) e.currentTarget.style.background = "transparent"; }}
-          >
+            }}>
             <div style={{
               fontFamily: "var(--font-mono)", fontSize: 9.5,
               letterSpacing: ".08em", textTransform: "uppercase",
@@ -79,11 +76,11 @@ function DayPicker({ days, selected, onSelect }) {
   );
 }
 
-function TimelineBlock({ b, idx, last }) {
+function TimelineBlock({ b, onChange, onRemove, last }) {
   return (
     <li style={{
       display: "grid",
-      gridTemplateColumns: "92px 36px 1fr",
+      gridTemplateColumns: "92px 36px 1fr 24px",
       gap: 0,
       position: "relative",
       paddingBottom: last ? 0 : "var(--block-py, 14px)",
@@ -93,18 +90,21 @@ function TimelineBlock({ b, idx, last }) {
         fontFamily: "var(--font-mono)",
         fontSize: 11.5,
         color: "var(--ink-2)",
-        letterSpacing: ".02em",
         paddingTop: 2,
-        textAlign: "right",
-        paddingRight: 18,
+        paddingRight: 8,
       }}>
-        {b.t}
+        <EditableText
+          value={b.t}
+          onChange={v => onChange({ t: v })}
+          placeholder="HH:MM"
+          style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, textAlign: "right" }}
+        />
       </div>
       {/* Rail */}
       <div style={{ position: "relative" }}>
         <div style={{
           position: "absolute",
-          left: 13, top: 0, bottom: last ? "auto" : -2,
+          left: 13, top: 0,
           height: last ? 12 : "calc(100% + 4px)",
           width: 1,
           background: "var(--line)",
@@ -118,61 +118,86 @@ function TimelineBlock({ b, idx, last }) {
           display: "grid", placeItems: "center",
           fontSize: 13,
         }}>
-          {b.tag}
+          <EditableText
+            value={b.tag}
+            onChange={v => onChange({ tag: v })}
+            placeholder="·"
+            style={{ fontSize: 13, textAlign: "center", padding: 0 }}
+          />
         </div>
       </div>
       {/* Content */}
-      <div style={{ paddingLeft: 8, paddingTop: 1 }}>
+      <div style={{ paddingLeft: 8, paddingTop: 1, minWidth: 0 }}>
         <div style={{
           fontFamily: "var(--font-body)",
           fontSize: 14.5, fontWeight: 500,
           color: "var(--ink)",
         }}>
-          {b.label}
+          <EditableText
+            value={b.label}
+            onChange={v => onChange({ label: v })}
+            placeholder="What's happening"
+            style={{ fontWeight: 500 }}
+          />
         </div>
-        {b.note && (
-          <div style={{
-            fontSize: 12.5, color: "var(--ink-3)",
-            marginTop: 2, lineHeight: 1.45,
-          }}>
-            {b.note}
-          </div>
-        )}
+        <div style={{ fontSize: 12.5, color: "var(--ink-3)", marginTop: 2, lineHeight: 1.45 }}>
+          <EditableText
+            value={b.note}
+            onChange={v => onChange({ note: v })}
+            placeholder="add a note…"
+            style={{ fontSize: 12.5, color: "var(--ink-3)" }}
+          />
+        </div>
+      </div>
+      {/* Remove */}
+      <div style={{ paddingTop: 4 }}>
+        <button
+          onClick={onRemove}
+          title="Remove"
+          style={{
+            appearance: "none", border: 0, background: "none",
+            color: "var(--ink-3)", cursor: "default",
+            fontSize: 15, lineHeight: 1, padding: "2px 4px",
+          }}
+          onMouseEnter={e => { e.currentTarget.style.color = "var(--accent)"; }}
+          onMouseLeave={e => { e.currentTarget.style.color = "var(--ink-3)"; }}
+        >×</button>
       </div>
     </li>
   );
 }
 
-function DayView({ day }) {
-  const city = window.CITIES[day.city];
+function DayView({ day, onUpdate, onRemoveBlock, onAddBlock, onChangeCity }) {
+  const city = window.CITIES[day.city] || window.CITIES.tokyo;
   const endCity = day.endCity ? window.CITIES[day.endCity] : null;
   const weather = window.WEATHER[day.city];
 
   return (
     <article>
-      <div style={{
+      <div className="day-grid" style={{
         display: "grid",
         gridTemplateColumns: "1.1fr 1fr",
         gap: 48,
         alignItems: "start",
       }}>
-        {/* Left: heading + timeline */}
         <div>
+          {/* meta row */}
           <div style={{
-            display: "flex", gap: 14, alignItems: "baseline",
+            display: "flex", gap: 14, alignItems: "baseline", flexWrap: "wrap",
             fontFamily: "var(--font-mono)", fontSize: 11,
             color: "var(--ink-3)", letterSpacing: ".12em", textTransform: "uppercase",
             marginBottom: 14,
           }}>
-            <span style={{ color: "var(--accent)" }}>Day {String(day.n).padStart(2, "0")} / 17</span>
+            <span style={{ color: "var(--accent)" }}>Day {String(day.n).padStart(2, "0")} / {(day.totalDays || 17)}</span>
             <span>·</span>
             <span>{day.dow}, {shortDate(day.date)}</span>
             <span>·</span>
-            <CityChip cityKey={day.city} />
-            {endCity && (<>
-              <span style={{ color: "var(--accent)" }}>→</span>
-              <CityChip cityKey={day.endCity} />
-            </>)}
+            <EditableSelect
+              value={day.city}
+              options={CITY_OPTIONS}
+              onChange={v => onChangeCity(v)}
+              style={{ fontSize: 11, letterSpacing: ".06em", textTransform: "uppercase", color: "var(--accent)" }}
+            />
           </div>
 
           <h2 style={{
@@ -181,38 +206,104 @@ function DayView({ day }) {
             lineHeight: 1.05, letterSpacing: "-.01em",
             margin: "0 0 14px",
           }}>
-            {day.title}
+            <EditableText
+              value={day.title}
+              onChange={v => onUpdate({ title: v })}
+              placeholder="Day title"
+              style={{ fontFamily: "var(--font-display)", fontSize: 44, fontWeight: 500, letterSpacing: "-.01em", lineHeight: 1.05 }}
+            />
           </h2>
 
           <p style={{
             fontFamily: "var(--font-display)",
             fontStyle: "italic",
             fontSize: 17, color: "var(--ink-2)",
-            maxWidth: "44ch", margin: "0 0 26px",
+            margin: "0 0 26px",
           }}>
-            {day.summary}
+            <EditableText
+              value={day.summary}
+              onChange={v => onUpdate({ summary: v })}
+              placeholder="What's the day about?"
+              multiline
+              style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontSize: 17, color: "var(--ink-2)", lineHeight: 1.4 }}
+            />
           </p>
 
-          <div style={{
-            display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 30,
-          }}>
-            <Pill tone="ink">Base: {day.base}</Pill>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 30, alignItems: "center" }}>
+            <span style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "4px 12px",
+              border: ".5px solid var(--line)",
+              borderRadius: 999,
+              fontFamily: "var(--font-mono)", fontSize: 10.5,
+              letterSpacing: ".04em", color: "var(--ink-2)",
+            }}>
+              <span style={{ width: 6, height: 6, background: "var(--ink)", borderRadius: "50%" }} />
+              Base:&nbsp;
+              <EditableText
+                value={day.base}
+                onChange={v => onUpdate({ base: v })}
+                placeholder="hotel / area"
+                style={{ fontFamily: "var(--font-mono)", fontSize: 10.5 }}
+              />
+            </span>
             {weather && (
               <Pill tone="gold">
-                {weather.icon} {weather.hi}° / {weather.lo}° · {weather.note}
+                {weather.icon} {weather.hi}° / {weather.lo}°
               </Pill>
             )}
-            <Pill tone="green">฿{day.budget.toLocaleString()} / pax</Pill>
+            <span style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "4px 12px",
+              border: ".5px solid var(--line)",
+              borderRadius: 999,
+              fontFamily: "var(--font-mono)", fontSize: 10.5,
+              letterSpacing: ".04em", color: "var(--ink-2)",
+            }}>
+              <span style={{ width: 6, height: 6, background: "var(--green)", borderRadius: "50%" }} />
+              <EditableNumber
+                value={day.budget}
+                onChange={v => onUpdate({ budget: v })}
+                prefix="฿"
+                suffix=" / pax"
+                style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, textAlign: "left" }}
+              />
+            </span>
           </div>
 
           <ol style={{ listStyle: "none", padding: 0, margin: 0 }}>
             {day.blocks.map((b, i) => (
-              <TimelineBlock key={i} b={b} idx={i} last={i === day.blocks.length - 1} />
+              <TimelineBlock
+                key={i}
+                b={b}
+                last={i === day.blocks.length - 1}
+                onChange={patch => {
+                  const newBlocks = day.blocks.map((x, j) => j === i ? { ...x, ...patch } : x);
+                  onUpdate({ blocks: newBlocks });
+                }}
+                onRemove={() => onRemoveBlock(i)}
+              />
             ))}
           </ol>
+
+          {/* Add block */}
+          <button
+            onClick={onAddBlock}
+            style={{
+              appearance: "none", border: 0,
+              marginTop: 14,
+              padding: "10px 14px",
+              background: "rgba(196,66,42,.04)",
+              color: "var(--accent)",
+              fontFamily: "var(--font-mono)", fontSize: 11,
+              letterSpacing: ".1em", textTransform: "uppercase",
+              cursor: "default",
+              borderLeft: "2px solid var(--accent)",
+            }}>
+            + เพิ่มกิจกรรม
+          </button>
         </div>
 
-        {/* Right: photo + sidebar */}
         <aside style={{ position: "sticky", top: 20 }}>
           <HeroPhoto
             id={day.hero}
@@ -220,73 +311,30 @@ function DayView({ day }) {
             kanji={city.kanji}
             caption={`day ${String(day.n).padStart(2, "0")} · ${city.name.toLowerCase()}`}
           />
-          {/* Notes block */}
           <div style={{
-            marginTop: 22,
-            padding: "18px 20px",
+            marginTop: 18,
+            padding: "14px 18px",
             border: ".5px solid var(--line)",
-            background: "rgba(176,133,64,.06)",
-            borderLeft: "2px solid var(--gold)",
+            background: "rgba(0,0,0,.012)",
           }}>
             <div style={{
               fontFamily: "var(--font-mono)", fontSize: 10,
-              color: "var(--gold)", letterSpacing: ".14em", textTransform: "uppercase",
-              marginBottom: 8,
+              color: "var(--ink-3)", letterSpacing: ".14em", textTransform: "uppercase",
+              marginBottom: 6,
             }}>
-              Group note
+              Tip
             </div>
-            <div style={{ fontSize: 13.5, color: "var(--ink-2)", lineHeight: 1.5 }}>
-              {day.n === 11
-                ? "Phum drives Tokyo → Mishima. Top takes the wheel after Hamanako. Everyone naps in shifts. ETC card is in the glovebox."
-                : day.n === 1
-                ? "Bags through customs in ~25 min on arrival cards. Don't lose the entry stub — needed for tax-free shopping."
-                : day.n === 9
-                ? "Hydrate. Charge phones in queue. Single-rider line is your friend for the big mountain coasters."
-                : day.n === 17
-                ? "Last konbini run, then return the car with a full tank. Don't forget the ETC card from the glovebox."
-                : "Group chat for coordination — drop pins, share photos, call the slow walker."}
+            <div style={{ fontSize: 12.5, color: "var(--ink-2)", lineHeight: 1.5 }}>
+              Tap any text, time, emoji, or number to edit. Press <kbd style={{
+                fontFamily: "var(--font-mono)", fontSize: 10.5, padding: "1px 6px",
+                border: ".5px solid var(--line)", borderRadius: 3,
+              }}>Enter</kbd> to save, <kbd style={{
+                fontFamily: "var(--font-mono)", fontSize: 10.5, padding: "1px 6px",
+                border: ".5px solid var(--line)", borderRadius: 3,
+              }}>Esc</kbd> to cancel.
             </div>
           </div>
-
-          {/* Mini-list of reservations on this day */}
-          {window.RESERVATIONS.filter(r => r.date === day.date).length > 0 && (
-            <div style={{
-              marginTop: 18,
-              padding: "16px 20px",
-              border: ".5px solid var(--line)",
-            }}>
-              <div style={{
-                fontFamily: "var(--font-mono)", fontSize: 10,
-                color: "var(--ink-3)", letterSpacing: ".14em", textTransform: "uppercase",
-                marginBottom: 10,
-              }}>
-                Bookings · {day.date}
-              </div>
-              {window.RESERVATIONS.filter(r => r.date === day.date).map((r, i) => (
-                <div key={i} style={{
-                  display: "flex", justifyContent: "space-between",
-                  fontSize: 12.5, padding: "6px 0",
-                  borderTop: i === 0 ? 0 : ".5px solid var(--line-2)",
-                }}>
-                  <span style={{ color: "var(--ink-2)" }}>{r.what}</span>
-                  <span style={{ fontFamily: "var(--font-mono)", color: "var(--ink-3)" }}>{r.time}</span>
-                </div>
-              ))}
-            </div>
-          )}
         </aside>
-      </div>
-
-      {/* Footer prev/next */}
-      <div style={{
-        marginTop: 60, paddingTop: 22,
-        borderTop: ".5px solid var(--line)",
-        display: "flex", justifyContent: "space-between",
-        fontFamily: "var(--font-mono)", fontSize: 11,
-        color: "var(--ink-3)", letterSpacing: ".06em", textTransform: "uppercase",
-      }}>
-        <span>↑ scroll to switch day</span>
-        <span>{String(day.n).padStart(2, "0")} / 17</span>
       </div>
     </article>
   );
@@ -296,9 +344,9 @@ function ListView({ days }) {
   return (
     <div>
       {days.map(d => {
-        const city = window.CITIES[d.city];
+        const city = window.CITIES[d.city] || window.CITIES.tokyo;
         return (
-          <article key={d.n} style={{
+          <article key={d.n} className="list-row" style={{
             display: "grid",
             gridTemplateColumns: "100px 1fr 200px",
             gap: 28,
@@ -316,14 +364,13 @@ function ListView({ days }) {
               <div style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 500, lineHeight: 1 }}>
                 {shortDate(d.date)}
               </div>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--ink-3)", marginTop: 4, letterSpacing: ".04em" }}>
-                {d.dow} · {dayOfWeekJP(d.dow)}
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--ink-3)", marginTop: 4 }}>
+                {d.dow}
               </div>
             </div>
             <div>
               <div style={{ display: "flex", gap: 10, alignItems: "baseline", marginBottom: 6 }}>
                 <CityChip cityKey={d.city} />
-                {d.endCity && <><span style={{ color: "var(--accent)" }}>→</span><CityChip cityKey={d.endCity} /></>}
               </div>
               <div style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 500, marginBottom: 6 }}>
                 {d.title}
@@ -331,25 +378,8 @@ function ListView({ days }) {
               <div style={{ fontSize: 13.5, color: "var(--ink-3)", maxWidth: "60ch" }}>
                 {d.summary}
               </div>
-              <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap", gap: 6 }}>
-                {d.blocks.slice(0, 5).map((b, i) => (
-                  <span key={i} style={{
-                    fontFamily: "var(--font-mono)", fontSize: 10.5,
-                    color: "var(--ink-3)", padding: "3px 8px",
-                    border: ".5px solid var(--line)",
-                    borderRadius: 999,
-                  }}>
-                    {b.tag} {b.label.split("·")[0].slice(0, 24)}
-                  </span>
-                ))}
-                {d.blocks.length > 5 && (
-                  <span style={{
-                    fontFamily: "var(--font-mono)", fontSize: 10.5,
-                    color: "var(--ink-3)", padding: "3px 8px",
-                  }}>
-                    +{d.blocks.length - 5} more
-                  </span>
-                )}
+              <div style={{ marginTop: 10, fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--ink-3)" }}>
+                {d.blocks.length} activities · base {d.base}
               </div>
             </div>
             <div style={{ textAlign: "right" }}>
@@ -372,23 +402,88 @@ function ListView({ days }) {
 }
 
 function Itinerary({ view, selectedDay, setSelectedDay }) {
-  const day = window.DAYS.find(d => d.n === selectedDay) || window.DAYS[0];
+  const [days, setDays] = usePersonal("itinerary_v1", window.DAYS);
+  const day = days.find(d => d.n === selectedDay) || days[0];
+
+  function updateDay(n, patch) {
+    setDays(ds => ds.map(d => d.n === n ? { ...d, ...patch } : d));
+  }
+  function changeCity(n, cityKey) {
+    updateDay(n, { city: cityKey });
+  }
+  function removeBlock(n, blockIdx) {
+    setDays(ds => ds.map(d => d.n !== n ? d : {
+      ...d, blocks: d.blocks.filter((_, i) => i !== blockIdx),
+    }));
+  }
+  function addBlock(n) {
+    setDays(ds => ds.map(d => d.n !== n ? d : {
+      ...d,
+      blocks: [...d.blocks, { t: "12:00", tag: "📌", label: "New activity", note: "" }],
+    }));
+  }
+  function addDay() {
+    setDays(ds => {
+      const last = ds[ds.length - 1];
+      const lastDate = new Date(last.date + "T00:00:00");
+      const next = new Date(lastDate.getTime() + 86400000);
+      const iso = next.toISOString().slice(0, 10);
+      const dow = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][next.getDay()];
+      return [...ds, {
+        n: last.n + 1, date: iso, dow, city: last.city, base: last.base,
+        title: "New day",
+        summary: "What's happening on this day?",
+        hero: "expressway",
+        blocks: [{ t: "10:00", tag: "📍", label: "First activity", note: "" }],
+        budget: 3000,
+      }];
+    });
+  }
+  function removeDay(n) {
+    if (!confirm("ลบวันนี้ออกจากแผน?")) return;
+    setDays(ds => ds.filter(d => d.n !== n));
+    if (selectedDay === n && days.length > 1) {
+      const next = days.find(d => d.n !== n);
+      if (next) setSelectedDay(next.n);
+    }
+  }
+  function resetAll() {
+    if (!confirm("รีเซ็ตแผนทั้งหมดกลับเป็นค่าตั้งต้น?")) return;
+    setDays(window.DAYS);
+  }
 
   return (
     <div>
       <SectionHeader
         title="Itinerary"
         jp="旅程"
-        right={`${window.TRIP.totalDays} days · ${window.DAYS.length} entries`}
+        right={
+          <span style={{ display: "inline-flex", gap: 16, alignItems: "center" }}>
+            <span>{days.length} days</span>
+            <button className="link-btn" onClick={addDay}>+ วัน</button>
+            {day && days.length > 1 && (
+              <button className="link-btn" onClick={() => removeDay(day.n)}>× ลบวันนี้</button>
+            )}
+            <button className="link-btn" onClick={resetAll}>↺ reset</button>
+          </span>
+        }
       />
 
       {view === "day" ? (
         <>
-          <DayPicker days={window.DAYS} selected={selectedDay} onSelect={setSelectedDay} />
-          <DayView day={day} />
+          <DayPicker days={days} selected={selectedDay} onSelect={setSelectedDay} />
+          {day && (
+            <DayView
+              day={{ ...day, totalDays: days.length }}
+              onUpdate={patch => updateDay(day.n, patch)}
+              onChangeCity={city => changeCity(day.n, city)}
+              onAddBlock={() => addBlock(day.n)}
+              onRemoveBlock={i => removeBlock(day.n, i)}
+            />
+          )}
         </>
       ) : (
-        <ListView days={window.DAYS} />
+        <ListView days={days} />
       )}
     </div>
   );
