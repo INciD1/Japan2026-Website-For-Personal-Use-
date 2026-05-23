@@ -1,0 +1,43 @@
+# render.yaml — Render Static Site deployment
+# Docs: https://render.com/docs/blueprint-spec
+#
+# Usage:
+#   1. Push this repo to GitHub / GitLab
+#   2. On Render → New + → Blueprint → connect your repo
+#   3. Render reads this file and provisions the static site automatically
+#
+# Everything in this site is static HTML/CSS/JSX rendered client-side by Babel,
+# so there's no build step.
+
+services:
+  - type: web
+    name: japan-26-itinerary
+    runtime: static
+    # No bundler — files are served as-is
+    buildCommand: "echo 'No build step — static client-side React via Babel'"
+    staticPublishPath: ./
+    pullRequestPreviewsEnabled: true
+
+    # SPA-style fallback so deep links (e.g. /itinerary) still load index.html
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+    # Light caching + security headers
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: SAMEORIGIN
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*.css
+        name: Cache-Control
+        value: public, max-age=3600, must-revalidate
+      - path: /*.jsx
+        name: Cache-Control
+        value: public, max-age=3600, must-revalidate
+      - path: /index.html
+        name: Cache-Control
+        value: no-cache, no-store, must-revalidate
