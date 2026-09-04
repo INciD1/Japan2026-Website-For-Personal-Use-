@@ -1,71 +1,71 @@
 # Japan '26 Itinerary
 
-เว็บไซต์ itinerary ทริปญี่ปุ่น 29 Jul – 14 Aug 2026 (5 คน, KKU 6630 cohort)
-สร้างด้วย React + Babel แบบ client-side ล้วน ไม่มี build step
+Itinerary website for a Japan trip, 29 Jul – 14 Aug 2026 (5 people, KKU 6630 cohort).
+Built with React + Babel, entirely client-side — no build step.
 
 ---
 
-## โครงสร้างไฟล์
+## File Structure
 
 ```
-├── index.html          # entry point — โหลด React, Babel, และไฟล์ .jsx ทั้งหมด
-├── styles.css          # ตัวแปร CSS + theme + density + dark mode
-├── data.jsx            # ข้อมูลทริป (วัน, เมือง, จองที่พัก, งบ, todos)
-├── app.jsx             # root component + tab nav + tweaks
-├── identity.jsx        # ระบบ sign-in ด้วยรหัสนักศึกษา (localStorage)
-├── overview.jsx        # tab 1 — overview
-├── itinerary.jsx       # tab 2 — day-by-day
-├── map.jsx             # tab 3 — แผนที่ SVG ของญี่ปุ่น
-├── budget.jsx          # tab 4 — งบ
-├── reservations.jsx    # tab 5 — รายการจอง
-├── notes.jsx           # tab 6 — notes ส่วนตัว (per-user)
-├── components.jsx      # UI primitives ใช้ร่วม
-├── tweaks-panel.jsx    # tweaks panel (theme/font/density)
-└── render.yaml         # คอนฟิก deploy บน Render
+├── index.html          # entry point — loads React, Babel, and all .jsx files
+├── styles.css           # CSS variables + theme + density + dark mode
+├── data.jsx             # trip data (days, cities, bookings, budget, todos)
+├── app.jsx              # root component + tab nav + tweaks
+├── identity.jsx          # sign-in system using student codes (localStorage)
+├── overview.jsx          # tab 1 — overview
+├── itinerary.jsx          # tab 2 — day-by-day
+├── map.jsx               # tab 3 — illustrated SVG map of Japan
+├── budget.jsx             # tab 4 — budget
+├── reservations.jsx        # tab 5 — bookings log
+├── notes.jsx               # tab 6 — personal notes (per-user)
+├── components.jsx          # shared UI primitives
+├── tweaks-panel.jsx        # tweaks panel (theme/font/density)
+└── render.yaml             # Render deployment config
 ```
 
 ---
 
-## ขั้นตอนทำงานใน VS Code
+## Working in VS Code
 
-### 1. เปิดโปรเจกต์
-- แตก zip
-- VS Code → **File → Open Folder** → เลือกโฟลเดอร์โปรเจกต์
+### 1. Open the project
+- Unzip
+- VS Code → **File → Open Folder** → select the project folder
 
-### 2. รัน local server (จำเป็น!)
+### 2. Run a local server (required!)
 
-เปิด `index.html` ตรงๆ ด้วย `file://` **จะไม่ work** เพราะ browser block การโหลด `.jsx` ข้าม file scheme — ต้องเปิดผ่าน local server
+Opening `index.html` directly via `file://` **will not work** — browsers block loading `.jsx` files across the file scheme. You must serve it through a local server.
 
-**ทางเลือกที่ 1 — VS Code Live Server (แนะนำที่สุด)**
-1. ไปที่ Extensions (Ctrl+Shift+X) → ค้น **"Live Server"** ของ Ritwick Dey → Install
-2. คลิกขวาที่ `index.html` → **Open with Live Server**
-3. เว็บเปิดที่ `http://127.0.0.1:5500` อัตโนมัติ แก้ไฟล์ปุ๊บ refresh ปั๊บ
+**Option 1 — VS Code Live Server (most recommended)**
+1. Go to Extensions (Ctrl+Shift+X) → search **"Live Server"** by Ritwick Dey → Install
+2. Right-click `index.html` → **Open with Live Server**
+3. The site opens at `http://127.0.0.1:5500` automatically — edits refresh live
 
-**ทางเลือกที่ 2 — Python (ติดมากับ Mac/Linux)**
+**Option 2 — Python (built into Mac/Linux)**
 ```bash
 python3 -m http.server 8080
-# เปิด browser → http://localhost:8080
+# open browser → http://localhost:8080
 ```
 
-**ทางเลือกที่ 3 — Node**
+**Option 3 — Node**
 ```bash
 npx serve .
-# หรือ
+# or
 npx http-server -p 8080
 ```
 
-### 3. แก้ไขโค้ด
+### 3. Editing
 
-- เปลี่ยน itinerary → แก้ `data.jsx`
-- เปลี่ยนรูปลักษณ์/สี → แก้ตัวแปรใน `styles.css` (`:root { --paper: ... }`)
-- เพิ่ม tab ใหม่ → แก้ array `TABS` ใน `app.jsx`
+- Change the itinerary → edit `data.jsx`
+- Change the look/colors → edit variables in `styles.css` (`:root { --paper: ... }`)
+- Add a new tab → edit the `TABS` array in `app.jsx`
 
-VS Code extension แนะนำ:
+Recommended VS Code extensions:
 - **Live Server** — auto-reload
-- **Babel JavaScript** หรือ **ES7+ React/Redux/React-Native snippets** — syntax highlight ของ JSX
+- **Babel JavaScript** or **ES7+ React/Redux/React-Native snippets** — JSX syntax highlighting
 - **Prettier** — auto-format
 
-### 4. Push ขึ้น GitHub
+### 4. Push to GitHub
 
 ```bash
 git init
@@ -76,7 +76,7 @@ git remote add origin https://github.com/<username>/japan-26.git
 git push -u origin main
 ```
 
-> **Tip:** สร้างไฟล์ `.gitignore` กันไฟล์ขยะ:
+> **Tip:** create a `.gitignore` to keep out junk files:
 > ```
 > .DS_Store
 > node_modules/
@@ -84,39 +84,29 @@ git push -u origin main
 > *.log
 > ```
 
-### 5. Deploy บน Render
+### 5. Deploy on Render
 
 1. Render Dashboard → **New +** → **Blueprint**
-2. เลือก repo ของคุณ
-3. Render อ่าน `render.yaml` แล้ว provision ให้อัตโนมัติ
-4. ได้ URL `https://japan-26-itinerary.onrender.com`
+2. Select your repo
+3. Render reads `render.yaml` and provisions the site automatically
+4. You get a URL like `https://japan-26-itinerary.onrender.com`
 
-Static site ของ Render **ฟรี ไม่ sleep** — ใช้ได้ตลอดเวลา
-
----
-
-## ระบบ Sign-in (per-user notes)
-
-แต่ละคนเข้ามาที่เว็บต้อง:
-1. คลิกการ์ดของชื่อตัวเอง
-2. พิมพ์รหัสนักศึกษาให้ตรง (`6630611xxx`)
-3. กด Enter
-
-ข้อมูลส่วนตัว (personal todos, personal note) เก็บใน `localStorage` ของ browser ตัวเอง คีย์เป็น `japan26_<feature>_<student_code>`
-
-> หมายเหตุ: ถ้าใช้คนละ browser/device จะต้อง sign in ใหม่และข้อมูลส่วนตัวจะแยกกัน — ไม่ sync ข้าม device
+Render's static sites are **free and don't sleep** — always available.
 
 ---
 
-## รหัสนักศึกษาที่ใช้
+## Sign-in System (per-user notes)
 
-| รหัส | ชื่อเล่น | ชื่อ-นามสกุล |
-|---|---|---|
-| 6630611007 | Phum | Phumipat Buaphet |
-| 6630611012 | Dech | Dechnarin Prabpala |
-| 6630611030 | Non  | Nonpawit Denyuk |
-| 6630611033 | Au   | Auchukorn Veschapun |
-| 6630611043 | Top  | Worathep Panton |
+To use the site, each person:
+1. Clicks their own name card
+2. Types their matching student code (`6630611xxx`)
+3. Presses Enter
+
+Personal data (personal todos, personal notes) is stored in that browser's own `localStorage`, keyed as `japan26_<feature>_<student_code>`.
+
+> Note: switching browsers/devices requires signing in again, and personal data doesn't sync across devices.
+
+> ⚠️ **This is not real authentication.** The student code only scopes which `localStorage` key personal notes are saved under — it doesn't gate access to any content, and both `data.jsx` and this README list every valid code in plain text. Treat this repo as containing personal information for 5 people, not just yourself, and keep it **private**.
 
 ---
 
